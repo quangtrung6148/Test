@@ -1,0 +1,13 @@
+{
+  "name": "mini-task-app",
+  "version": "1.0.0",
+  "private": true,
+  "engines": { "node": ">=22 <23" },
+  "scripts": {
+    "setup": "node scripts/run.mjs install",
+    "build": "node scripts/run.mjs build",
+    "typecheck": "node scripts/run.mjs typecheck",
+    "lint": "node scripts/run.mjs lint",
+    "test": "node scripts/run.mjs test"
+  }
+}

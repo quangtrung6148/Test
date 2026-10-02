@@ -1,0 +1,41 @@
+# Review paid plans before creating these resources in Render.
+services:
+  - type: web
+    name: mini-task-api
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: 0.5c-512mb
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: SERVICE_API_KEY
+        generateValue: true
+
+  - type: worker
+    name: mini-task-worker
+    runtime: docker
+    rootDir: service
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: 0.5c-512mb
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: BACKEND_URL
+        sync: false
+      - key: POLL_INTERVAL_MS
+        value: "60000"
+      - key: SERVICE_API_KEY
+        fromService:
+          type: web
+          name: mini-task-api
+          envVarKey: SERVICE_API_KEY

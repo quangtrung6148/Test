@@ -1,6 +1,14 @@
 # Báo cáo kiểm tra — 02/10/2026
 
-Triển khai tại `F:\Test` bằng Node.js `22.14.0`, npm `10.9.2`. Đã bổ sung đăng ký/đăng nhập/đăng xuất bằng Supabase Auth và task riêng cho từng tài khoản theo yêu cầu cập nhật. Chưa public GitHub hoặc deploy cloud.
+Triển khai tại `F:\Test` bằng Node.js `22.14.0`, npm `10.9.2`. Đã bổ sung đăng ký/đăng nhập/đăng xuất bằng Supabase Auth và task riêng cho từng tài khoản theo yêu cầu cập nhật. Mã nguồn đã public tại [quangtrung6148/Test](https://github.com/quangtrung6148/Test); chưa deploy cloud.
+
+## Cập nhật khi bắt đầu deployment
+
+- Đã push mã nguồn lên nhánh `main`, commit `57ce76c`; hợp nhất commit khởi tạo `README.md` của repository và giữ nguyên cây mã nguồn đã kiểm thử của commit local `2d9421a`.
+- Kiểm tra 69 file trước khi publish: không có file env thật được theo dõi, không phát hiện giá trị secret backend/service trong mã nguồn được commit.
+- Kiểm tra schema Supabase thật sau khi publish: truy vấn `id,user_id` vẫn trả `400 / 42703`. Cần chạy migration 002 trước khi nghiệm thu task riêng.
+- Vercel, Render, Supabase đã được hệ thống xác nhận cài đặt. Người dùng đã kiểm tra team/workspace `Rannn` và Supabase `ACTIVE_HEALTHY` ở phiên khác; công cụ của ba dịch vụ chưa được nạp vào phiên triển khai local hiện tại.
+- Hướng dẫn tiếp tục bằng phiên có công cụ cloud nằm trong [DEPLOYMENT_HANDOFF.md](DEPLOYMENT_HANDOFF.md).
 
 ## Cập nhật khi chạy local với Supabase thật
 
@@ -51,7 +59,7 @@ Playwright trong sandbox Windows từng kẹt ở bước dọn process. Lần n
 - Supabase thật đã đọc bảng `tasks` qua internal API thành công. Chưa chạy migration tài khoản 002; chưa nghiệm thu ghi/lưu trữ task riêng, RLS hoặc timestamp bằng database thật.
 - Chưa nghiệm thu đăng ký/gửi thư xác nhận/đăng nhập thành công và phân quyền giữa hai tài khoản trên Supabase thật. Auth/UI/owner filter đã có test mock; kiểm tra live mới chỉ gồm từ chối đăng nhập sai và chặn request thiếu token.
 - `render.yaml` đã đối chiếu tài liệu chính thức về monorepo, environment và plan `0.5c-512mb`; chưa validate/sync trên tài khoản Render.
-- Chưa tạo repository GitHub public; chưa kiểm tra lịch sử remote.
+- Đã public source trên GitHub; cần xác minh lại khi thêm secret/config ở các bước cloud tiếp theo.
 - Chưa deploy Render/Vercel và chưa kiểm tra CORS giữa các domain cloud.
 
 Các bước còn lại và biến môi trường có trong [README](README.md).
@@ -70,4 +78,4 @@ Các bước còn lại và biến môi trường có trong [README](README.md).
 - [ ] Service deploy Render — bạn thực hiện
 - [ ] Frontend deploy Vercel — bạn thực hiện
 - [ ] Vercel gọi được Render API — kiểm tra sau deploy
-- [ ] Không có secret trên GitHub — source local không chứa secret thật; xác minh lại trước/sau push
+- [x] Không có secret trong source đã push lên GitHub — file env thật được ignore, kiểm tra source và cây mã nguồn trước push đạt

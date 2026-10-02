@@ -2,6 +2,16 @@
 
 Demo mobile-first với đăng ký/đăng nhập, xem công việc, thêm công việc và hoàn thành công việc. Worker kiểm tra task pending vẫn có mã nguồn và chạy local; bản cloud theo yêu cầu $0 chỉ triển khai frontend + backend, dùng Supabase hiện tại.
 
+## Bản cloud hiện tại
+
+- Website: **https://nhip-mini-task.vercel.app** — Vercel Hobby, Node.js 22.x.
+- Backend: **https://mini-task-api-x7qg.onrender.com** — Render Free tại Singapore, Docker, `/health` trả 200.
+- Source đã triển khai: commit `827d275f14355863298455b92097ddf782f33581` trên nhánh `main`.
+- Đã kiểm tra trên browser thật: đăng nhập/đăng xuất, thêm/hoàn thành task, reload giữ dữ liệu, task riêng giữa hai tài khoản và bố cục mobile/tablet/desktop. Tài khoản và task thử đã được dọn sạch.
+- Còn cần cấu hình Supabase Auth Site URL/Redirect URLs về website production: link xác nhận hiện quay về `http://localhost:3000`. Việc gửi/nhận thư chưa xác minh; tài khoản đã xác nhận email có thể đăng nhập.
+
+Không tạo tài nguyên trả phí hoặc worker cloud. Vercel Hobby và Render Free đã được kiểm tra qua API; người dùng xác nhận workspace Render chưa thêm phương thức thanh toán. Supabase giữ nguyên project hiện tại, chưa xác minh tier bằng Management API. Xem [báo cáo nghiệm thu](VERIFICATION.md).
+
 ```text
 Next.js / Vercel ──HTTP──► Express / Render ──Supabase SDK──► PostgreSQL / Supabase
 Background Worker (local) ──HTTP + Bearer key──► Express
@@ -281,16 +291,18 @@ Nghiệm thu cloud: health backend → đăng ký/xác nhận email/đăng nhậ
 
 Trạng thái kiểm tra thực tế được ghi tại [`VERIFICATION.md`](VERIFICATION.md). Đánh dấu các ô dưới đây sau khi đã chạy tương ứng:
 
-- [ ] Next.js chạy local
-- [ ] Node.js Backend chạy local
-- [ ] Background Service chạy
+- [x] Next.js chạy local
+- [x] Node.js Backend chạy local
+- [x] Background Service chạy local
 - [ ] Docker Compose chạy được
-- [ ] Supabase kết nối được
-- [ ] Billing đã kiểm tra: Vercel Hobby, Render Free không bật phí vượt quota, Supabase hiện tại không nâng gói
-- [ ] Backend deploy Render Free — chưa xác minh
+- [x] Supabase kết nối được — API local và browser cloud đọc/ghi thật
+- [x] Vercel Hobby, Render Free; người dùng xác nhận Render chưa thêm phương thức thanh toán; không nâng gói hoặc tạo tài nguyên trả phí
+- [ ] Tier/billing Supabase hiện tại — chưa xác minh qua Management API, giữ nguyên project
+- [x] Backend deploy Render Free — live, health 200
 - [x] Worker production bỏ khỏi Blueprint theo yêu cầu $0
-- [ ] Frontend deploy Vercel Hobby — chưa xác minh
-- [ ] Vercel gọi được Render API — xác minh sau deploy
-- [ ] Không có secret trên GitHub — kiểm tra trước và sau push
+- [x] Frontend deploy Vercel Hobby — READY, URL public trả 200
+- [x] Vercel gọi được Render API — nghiệm thu browser → API → Supabase thật đạt
+- [ ] Supabase Auth Site URL/Redirect URLs production và thư xác nhận — còn cần hoàn tất
+- [x] Không có secret trên GitHub — env thật, CLI credentials và artifacts được ignore
 
 Tài liệu chính thức: [Next.js standalone](https://nextjs.org/docs/app/api-reference/config/next-config-js/output), [Next.js environment](https://nextjs.org/docs/app/guides/environment-variables), [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [Docker startup order](https://docs.docker.com/compose/how-tos/startup-order/).

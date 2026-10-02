@@ -11,6 +11,7 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: free
+    region: singapore
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV

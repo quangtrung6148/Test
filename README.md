@@ -1,10 +1,10 @@
 # Nhịp — Mini Task App
 
-Demo mobile-first với bốn chức năng: xem công việc, thêm công việc, hoàn thành công việc và background worker kiểm tra các công việc pending.
+Demo mobile-first với đăng ký/đăng nhập, xem công việc, thêm công việc và hoàn thành công việc. Worker kiểm tra task pending vẫn có mã nguồn và chạy local; bản cloud theo yêu cầu $0 chỉ triển khai frontend + backend, dùng Supabase hiện tại.
 
 ```text
 Next.js / Vercel ──HTTP──► Express / Render ──Supabase SDK──► PostgreSQL / Supabase
-Background Worker / Render ──HTTP + Bearer key──► Express / Render
+Background Worker (local) ──HTTP + Bearer key──► Express
 ```
 
 App có đăng ký, đăng nhập và đăng xuất bằng email/mật khẩu qua Supabase Auth. Mỗi tài khoản chỉ xem, thêm và hoàn thành task của mình. Frontend và worker không kết nối trực tiếp database; mọi thao tác tài khoản và task đều đi qua Express. Worker kiểm tra tổng số task pending của tất cả tài khoản bằng internal API riêng.
@@ -14,9 +14,9 @@ App có đăng ký, đăng nhập và đăng xuất bằng email/mật khẩu qu
 - Node.js 22 và npm (trên PowerShell có thể dùng `npm.cmd` nếu execution policy chặn `npm.ps1`).
 - Docker Desktop với Linux containers, Docker Compose v2, nếu chạy bằng Docker.
 - Một project Supabase external đã chạy migration.
-- Tài khoản GitHub, Vercel và Render để tự triển khai cloud.
+- Tài khoản GitHub, Vercel Hobby và Render với backend Free để triển khai cloud.
 
-Không có BMAD/skill chuyên dụng cho stack này được cung cấp trong môi trường triển khai. Quy trình: phân tích → kiến trúc/schema/API → triển khai → kiểm thử → Docker → cấu hình deployment.
+Quy trình: phân tích → kiến trúc/schema/API → triển khai → kiểm thử → Docker → cấu hình deployment.
 
 ## Cấu trúc
 
@@ -229,36 +229,36 @@ Kiểm tra tích hợp thật sau khi có Docker/Supabase:
 
 ## Public GitHub
 
-Tạo repository **public** tên `mini-task-app` trong tài khoản của bạn. Từ root, trước khi push kiểm tra chỉ có `.env.example` được theo dõi:
+Mã nguồn đã public tại [quangtrung6148/Test](https://github.com/quangtrung6148/Test), nhánh `main`. Khi cập nhật, kiểm tra chỉ có `.env.example` được theo dõi trước khi commit/push:
 
 ```bash
-git init
-git branch -M main
-git add .
+git status --short
+git ls-files
 git diff --cached --name-only
 git diff --cached
-git commit -m "Build mini task app with frontend, API and worker"
-git remote add origin https://github.com/YOUR_ACCOUNT/mini-task-app.git
-git push -u origin main
 ```
 
 `.gitignore` đã loại `.env`, `.env.*` chứa giá trị thật, build output, dependencies và test artifacts. Nếu bạn đã commit secret trước đó, việc ignore không xóa secret khỏi lịch sử: thay key và xử lý lịch sử trước khi public.
 
 ## Deploy Vercel / Render
 
-Triển khai cloud do bạn thực hiện. `render.yaml` khai báo **hai tài nguyên trả phí, plan `0.5c-512mb`**, không tự tạo hoặc thanh toán dịch vụ. Render Background Worker cần gói trả phí; xem [Blueprint reference](https://render.com/docs/blueprint-spec) và [Background Workers](https://render.com/docs/background-workers).
+Phương án đã chọn: **Vercel Hobby frontend + một Render Free backend + Supabase hiện tại**, không tạo tài nguyên trả phí. `render.yaml` chỉ khai báo một Web Service có `plan: free`, tắt Blueprint previews; không khai báo worker, database, Redis, disk hoặc cron. Không nâng gói tài khoản hoặc bật add-on. Mã nguồn worker và Docker Compose ba container vẫn dùng được khi chạy local.
+
+Trước khi Apply, xác minh Vercel đang ở **Hobby**, Supabase project hiện tại không bị nâng gói và Render đang dùng **Free**. Render Free vẫn tính vào quota bandwidth/build của workspace; nếu workspace đã có phương thức thanh toán, Render có thể thu phí vượt quota. Để giữ $0, dùng workspace miễn phí không có phương thức thanh toán và không bật thanh toán vượt quota. Không tự thay đổi billing, phương thức thanh toán hoặc tài nguyên đang dùng của tài khoản. Nếu workspace không đáp ứng điều kiện này, dừng deployment để chọn workspace phù hợp. Xem [Render Free](https://render.com/docs/free) và [Vercel Hobby](https://vercel.com/docs/plans/hobby).
+
+Backend Free ngủ sau 15 phút không có request; request tiếp theo có thể cần khoảng một phút để khởi động lại. Nếu UI báo lỗi kết nối ở lần đầu, đợi backend khởi động rồi thử lại. Task vẫn lưu ở Supabase. Không chạy worker cloud hoặc thêm job ping để giữ backend luôn thức.
 
 ### Vercel — frontend
 
-1. Import GitHub repository, đặt **Root Directory = frontend**, framework Next.js.
-2. Build `npm run build`, install `npm ci`.
+1. Trong tài khoản/team **Hobby**, import [GitHub repository](https://github.com/quangtrung6148/Test), đặt **Root Directory = frontend**, framework Next.js; không chọn Pro/trial/add-on.
+2. Chọn Node.js **22.x**. `frontend/vercel.json` đặt build `npm run build`, install `npm ci`.
 3. Đặt `NEXT_PUBLIC_API_URL=https://<render-backend>.onrender.com` cho Production; không thêm `/api/v1` vào biến này.
 4. Deploy và lấy URL production chính thức. Nếu chưa có URL backend, hoàn tất Render trước rồi cập nhật Vercel env và redeploy.
 5. Đổi env public cần **redeploy** vì Next.js nhúng biến lúc build. Không đưa bất kỳ Supabase/service key nào vào Vercel.
 
-### Render — backend + worker
+### Render — backend Free
 
-Tạo **Blueprint** từ GitHub repo, dùng `render.yaml`. Nhập các biến `sync: false` trong dashboard. Blueprint tạo backend trước worker; worker nhận cùng `SERVICE_API_KEY` từ backend.
+Mở [Blueprint từ repository](https://dashboard.render.com/blueprint/new?repo=https://github.com/quangtrung6148/Test), dùng `render.yaml` trên nhánh `main`. Kiểm tra preview chỉ có **mini-task-api**, loại **Web Service**, plan **Free / $0** trước khi Apply. Nhập các biến `sync: false` trong dashboard. Nếu dashboard đề nghị tài nguyên trả phí, không Apply.
 
 | Tài nguyên | Biến production | Cách đặt |
 |---|---|---|
@@ -268,18 +268,14 @@ Tạo **Blueprint** từ GitHub repo, dùng `render.yaml`. Nhập các biến `s
 | backend | `SUPABASE_SERVICE_ROLE_KEY` | Nhập server key vào secret env |
 | backend | `FRONTEND_URL` | Nhập origin Vercel production chính xác, không có path |
 | backend | `SERVICE_API_KEY` | Blueprint sinh tự động |
-| worker | `NODE_ENV` | `production` trong YAML |
-| worker | `BACKEND_URL` | Nhập `https://<render-backend>.onrender.com` |
-| worker | `SERVICE_API_KEY` | Tham chiếu env của backend |
-| worker | `POLL_INTERVAL_MS` | `60000` trong YAML |
 
-Không tham chiếu private host vì cấu hình này yêu cầu URL HTTP public của backend. Chưa biết URL lúc tạo Blueprint: nhập URL dự kiến, sau khi backend có URL chính thức cập nhật `BACKEND_URL` và restart worker. Không đánh dấu worker deploy thành công trước khi thấy log `pending_tasks_checked`.
+Backend vẫn yêu cầu `SERVICE_API_KEY` cho internal API; Blueprint sinh tự động dù production không chạy worker. Browser gọi URL HTTPS public của backend; không dùng private hostname hoặc localhost trong Vercel production.
 
-Cũng có thể tạo thủ công: backend **Web Service**, Root Directory `backend`, Dockerfile `./Dockerfile`, Docker context `.`, health path `/health`; worker **Background Worker**, Root Directory `service`, Dockerfile `./Dockerfile`, context `.`, cùng biến môi trường như bảng. Khi tạo thủ công, tự sinh một service key và đặt giống nhau cho hai tài nguyên.
+Cũng có thể tạo thủ công: backend **Web Service**, chọn **Free**, Root Directory `backend`, Dockerfile `./Dockerfile`, Docker context `.`, health path `/health`, cùng biến môi trường như bảng. Khi tạo thủ công, tự sinh service key ngẫu nhiên tối thiểu 32 ký tự. Không tạo Background Worker trong phương án $0.
 
 Sau khi có URL chính thức, cập nhật `FRONTEND_URL` của backend, `NEXT_PUBLIC_API_URL` của frontend và Site URL/Redirect URLs trong Supabase Auth. CORS chỉ cho phép một origin chính thức; URL Vercel preview khác domain chưa được cho phép. Nếu dùng preview để demo, cấu hình backend và Supabase Auth tương ứng rồi đổi lại production.
 
-Nghiệm thu cloud: health backend → tạo/complete task từ Vercel → reload kiểm tra lưu trữ → log worker count đúng → kiểm tra không có secret trong GitHub/frontend. `/health` thành công không đủ để kết luận Supabase đã kết nối.
+Nghiệm thu cloud: health backend → đăng ký/xác nhận email/đăng nhập → tạo/complete task từ Vercel → reload kiểm tra lưu trữ → hai tài khoản có task riêng → kiểm tra không có secret trong GitHub/frontend. `/health` thành công không đủ để kết luận Supabase đã kết nối. Worker production được bỏ theo yêu cầu; không có bước nghiệm thu worker cloud.
 
 ## Deployment checklist
 
@@ -290,10 +286,11 @@ Trạng thái kiểm tra thực tế được ghi tại [`VERIFICATION.md`](VERI
 - [ ] Background Service chạy
 - [ ] Docker Compose chạy được
 - [ ] Supabase kết nối được
-- [ ] Backend deploy Render — bạn thực hiện
-- [ ] Service deploy Render — bạn thực hiện
-- [ ] Frontend deploy Vercel — bạn thực hiện
-- [ ] Vercel gọi được Render API — bạn xác minh sau deploy
+- [ ] Billing đã kiểm tra: Vercel Hobby, Render Free không bật phí vượt quota, Supabase hiện tại không nâng gói
+- [ ] Backend deploy Render Free — chưa xác minh
+- [x] Worker production bỏ khỏi Blueprint theo yêu cầu $0
+- [ ] Frontend deploy Vercel Hobby — chưa xác minh
+- [ ] Vercel gọi được Render API — xác minh sau deploy
 - [ ] Không có secret trên GitHub — kiểm tra trước và sau push
 
 Tài liệu chính thức: [Next.js standalone](https://nextjs.org/docs/app/api-reference/config/next-config-js/output), [Next.js environment](https://nextjs.org/docs/app/guides/environment-variables), [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [Docker startup order](https://docs.docker.com/compose/how-tos/startup-order/).
